@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/netip"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -216,6 +218,13 @@ func (c *GslbCore) Query(srcIP netip.Addr) []netip.Addr {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// FIXME(student): Implement your own query logic
-	return []netip.Addr{c.cfg.Pops[0].Ip4}
+	suffixStr := strings.Split(srcIP.String(), ".")[3] // xxx.xxx.xxx.suffix
+	suffix, err := strconv.Atoi(suffixStr)
+	if err != nil {
+		println("debug:err: ", err)
+		return []netip.Addr{c.cfg.Pops[0].Ip4}
+	}
+
+	index := suffix % len(c.cfg.Pops) // hash by suffix
+	return []netip.Addr{c.cfg.Pops[index].Ip4}
 }
